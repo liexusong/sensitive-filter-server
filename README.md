@@ -1,9 +1,7 @@
 敏感词检测服务
 =============
-
-### 原理
-
-[戳我](https://www.tapd.cn/45546587/markdown_wikis/view/#1145546587001005708)
+s
+> 原理: 使用双数组字典树作为敏感词查询结构
 
 ### 编译
 ```
@@ -19,7 +17,7 @@ go test
 
 ### 启动服务
 ```
-./sensitive-server -source ./keywords -host 127.0.0.1 -port 8080
+./sensitive-filter-server -source ./keywords -host 127.0.0.1 -port 8080
 ```
 
 ### API列表
@@ -29,9 +27,9 @@ go test
 * __方法__：`GET`
 * __入参__：
 
-参数名称|参数类型|参数说明
-- | :-: | :-: | -:
-keyword|string|敏感词|
+|参数名称|参数类型|参数说明|
+|---|---|---|
+|keyword|string|敏感词|
 
 * __出参__：
 
@@ -56,9 +54,9 @@ keyword|string|敏感词|
 * __方法__：`GET`
 * __入参__：
 
-参数名称|参数类型|参数说明
-- | :-: | :-: | -:
-keyword|string|敏感词|
+|参数名称|参数类型|参数说明|
+|---|---|---|
+|keyword|string|敏感词|
 
 * __出参__：
 
