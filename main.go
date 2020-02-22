@@ -66,14 +66,24 @@ func MatchAll(ctx *gin.Context) {
 	RespErr(ctx, 202, "Cannot found keywords")
 }
 
-func AddWord(ctx *gin.Context) {
+func Exists(ctx *gin.Context) {
+	body, err := ioutil.ReadAll(ctx.Request.Body)
+	if err != nil {
+		RespErr(ctx, 201, "Parameters invalid")
+		return
+	}
+
+	RespOK(ctx, dict.Exists(body))
+}
+
+func AddKeyword(ctx *gin.Context) {
 	keyword := strings.TrimSpace(ctx.Query("keyword"))
 	if len(keyword) == 0 {
 		RespErr(ctx, 201, "Parameters invalid")
 		return
 	}
 
-	if dict.AddWord(keyword) {
+	if dict.AddKeyword(keyword) {
 		RespOK(ctx, nil)
 		return
 	}
@@ -81,14 +91,14 @@ func AddWord(ctx *gin.Context) {
 	RespErr(ctx, 202, "Cannot add keyword")
 }
 
-func DelWord(ctx *gin.Context) {
+func DelKeyword(ctx *gin.Context) {
 	keyword := strings.TrimSpace(ctx.Query("keyword"))
 	if len(keyword) == 0 {
 		RespErr(ctx, 201, "Parameters invalid")
 		return
 	}
 
-	if dict.DelWord(keyword) {
+	if dict.DelKeyword(keyword) {
 		RespOK(ctx, nil)
 		return
 	}
@@ -108,8 +118,9 @@ func main() {
 
 	router.POST("/api/match_first", MatchFirst)
 	router.POST("/api/match_all", MatchAll)
-	router.GET("/api/add_word", AddWord)
-	router.GET("/api/del_word", DelWord)
+	router.POST("/api/exists", Exists)
+	router.GET("/api/add_keyword", AddKeyword)
+	router.GET("/api/del_keyword", DelKeyword)
 
 	if err := router.Run(fmt.Sprintf("%s:%d", *host, *port)); err != nil {
 		log.Fatalf("Failed to run HTTP server error: %v\n", err)

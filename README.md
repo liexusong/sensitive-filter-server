@@ -23,7 +23,7 @@ go test
 ### API列表
 
 #### 添加敏感词
-* __接口__：`/api/add_word`
+* __接口__：`/api/add_keyword`
 * __方法__：`GET`
 * __入参__：
 
@@ -50,7 +50,7 @@ go test
 ```
 
 #### 删除敏感词
-* __接口__：`/api/del_word`
+* __接口__：`/api/del_keyword`
 * __方法__：`GET`
 * __入参__：
 
@@ -112,6 +112,29 @@ go test
     "code": 200,
     "resp": "OK",
     "data": ["敏感词1", "敏感词2", "敏感词3", "敏感词4", "敏感词5"]
+}
+
+// 错误返回
+{
+    "code":  201,
+    "resp": "Parameters Invalid",
+    "data": null,
+}
+```
+
+#### 判断文本是否存在敏感词
+* __接口__：`/api/exists`
+* __方法__：`POST`
+* __入参__：通过body传输要检测的文本
+
+* __出参__：
+
+```json
+// 成功返回
+{
+    "code": 200,
+    "resp": "OK",
+    "data": true
 }
 
 // 错误返回
