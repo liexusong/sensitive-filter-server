@@ -17,7 +17,7 @@ go test
 
 ### 启动服务
 ```
-./sensitive-filter-server -source ./keywords -host 127.0.0.1 -port 8080
+./sensitive-filter-server -source ./test_keywords -host 127.0.0.1 -port 8080
 ```
 
 ### API列表

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	keywordFile = "./keywords"
+	keywordFile = "./test_keywords"
 	matchTexts  = `分割侵权行为电站证券市场营业执照违约全球化市盈率推迟虐待增值税违法行为未成年人公司董事会没收有车有效期`
 )
 
