@@ -36,7 +36,8 @@ func (dict *Dict) GetLastId() int {
 func (dict *Dict) AddKeyword(origText string) bool {
 	realText := []byte(origText)
 
-	_, err := dict.wordTree.Get(realText) // Find the word aready exists?
+	// Find the word already exists?
+	_, err := dict.wordTree.Get(realText)
 	if err == nil {
 		return false
 	}
@@ -55,7 +56,8 @@ func (dict *Dict) AddKeyword(origText string) bool {
 func (dict *Dict) DelKeyword(origText string) bool {
 	realText := []byte(origText)
 
-	index, err := dict.wordTree.Get(realText) // Find the word aready exists?
+	// Find the word already exists?
+	index, err := dict.wordTree.Get(realText)
 	if err != nil {
 		return false
 	}
@@ -72,9 +74,9 @@ func (dict *Dict) DelKeyword(origText string) bool {
 func (dict *Dict) MatchAll(text []byte, size int) []string {
 	var values []string
 
-	matchs := dict.wordTree.MatchAll(text, size)
-	if len(matchs) > 0 {
-		for _, match := range matchs {
+	matches := dict.wordTree.MatchAll(text, size)
+	if len(matches) > 0 {
+		for _, match := range matches {
 			if value, exists := dict.wordMaps[match]; exists {
 				values = append(values, value)
 			}
@@ -111,6 +113,4 @@ func (dict *Dict) LoadWordsFile(path string) error {
 			dict.AddKeyword(word)
 		}
 	}
-
-	return nil
 }
