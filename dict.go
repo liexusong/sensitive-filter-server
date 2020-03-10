@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/liexusong/cedar-go"
 )
@@ -13,6 +14,7 @@ type Dict struct {
 	lastId   int
 	wordTree *cedar.Cedar
 	wordMaps map[int]string
+	mutex    *sync.RWMutex
 }
 
 func NewDict() *Dict {
@@ -20,6 +22,7 @@ func NewDict() *Dict {
 		lastId:   0,
 		wordTree: cedar.New(),
 		wordMaps: make(map[int]string),
+		mutex:    &sync.RWMutex{},
 	}
 }
 
@@ -35,6 +38,9 @@ func (dict *Dict) GetLastId() int {
 
 func (dict *Dict) AddKeyword(origText string) bool {
 	realText := []byte(origText)
+
+	dict.mutex.Lock()
+	defer dict.mutex.Unlock()
 
 	// Find the word already exists?
 	_, err := dict.wordTree.Get(realText)
@@ -56,6 +62,9 @@ func (dict *Dict) AddKeyword(origText string) bool {
 func (dict *Dict) DelKeyword(origText string) bool {
 	realText := []byte(origText)
 
+	dict.mutex.Lock()
+	defer dict.mutex.Unlock()
+
 	// Find the word already exists?
 	index, err := dict.wordTree.Get(realText)
 	if err != nil {
@@ -74,6 +83,9 @@ func (dict *Dict) DelKeyword(origText string) bool {
 func (dict *Dict) MatchAll(text []byte, size int) []string {
 	var values []string
 
+	dict.mutex.RLock()
+	defer dict.mutex.RUnlock()
+
 	matches := dict.wordTree.MatchAll(text, size)
 	if len(matches) > 0 {
 		for _, match := range matches {
@@ -87,6 +99,9 @@ func (dict *Dict) MatchAll(text []byte, size int) []string {
 }
 
 func (dict *Dict) Exists(text []byte) bool {
+	dict.mutex.RLock()
+	defer dict.mutex.RUnlock()
+
 	return dict.wordTree.Exists(text)
 }
 
