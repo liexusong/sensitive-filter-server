@@ -11,113 +11,93 @@ import (
 )
 
 var (
-	dict = NewDict()
-
-	host    = flag.String("host", "", "The server host")
-	port    = flag.Int("port", 8080, "The server port")
+	sHost   = flag.String("host", "", "The server host")
+	sPort   = flag.Int("port", 8080, "The server port")
 	srcFile = flag.String("source", "./keywords", "The keywords source file")
 	debug   = flag.Bool("debug", false, "Open debug mode")
 
-	respErrText = map[int]string{
-		200: "OK",
-		201: "Arguments Invalid",
-		202: "Not Found",
-	}
+	matcher *Dict
 )
-
-func RespJSON(ctx *gin.Context, code int, data... interface{}) {
-	var (
-		value interface{}
-	)
-
-	if len(data) > 0 {
-		value = data[0]
-	}
-
-	ctx.JSON(200, gin.H{
-		"code": code,
-		"data": value,
-		"resp": respErrText[code],
-	})
-}
 
 func MatchFirst(ctx *gin.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
-		RespJSON(ctx, 201)
+		RespJSON(ctx, ErrArgInvalid)
 		return
 	}
 
-	values := dict.MatchAll(body, 1)
+	values := matcher.MatchAll(body, 1)
 	if len(values) > 0 {
-		RespJSON(ctx, 200, values[0])
+		RespJSON(ctx, ErrOK, values[0])
 		return
 	}
 
-	RespJSON(ctx, 202)
+	RespJSON(ctx, ErrNotFound)
 }
 
 func MatchAll(ctx *gin.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
-		RespJSON(ctx, 201)
+		RespJSON(ctx, ErrArgInvalid)
 		return
 	}
 
-	values := dict.MatchAll(body, 0)
+	values := matcher.MatchAll(body, 0)
 	if len(values) > 0 {
-		RespJSON(ctx, 200, values)
+		RespJSON(ctx, ErrOK, values)
 		return
 	}
 
-	RespJSON(ctx, 202)
+	RespJSON(ctx, ErrNotFound)
 }
 
 func Exists(ctx *gin.Context) {
 	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
-		RespJSON(ctx, 201)
+		RespJSON(ctx, ErrArgInvalid)
 		return
 	}
 
-	RespJSON(ctx, 200, dict.Exists(body))
+	RespJSON(ctx, ErrOK, matcher.Exists(body))
 }
 
 func AddKeyword(ctx *gin.Context) {
 	keyword := strings.TrimSpace(ctx.Query("keyword"))
 	if len(keyword) == 0 {
-		RespJSON(ctx, 201)
+		RespJSON(ctx, ErrArgInvalid)
 		return
 	}
 
-	if dict.AddKeyword(keyword) {
-		RespJSON(ctx, 200)
+	if matcher.AddKeyword(keyword) {
+		RespJSON(ctx, ErrOK)
 		return
 	}
 
-	RespJSON(ctx, 202)
+	RespJSON(ctx, ErrNotFound)
 }
 
 func DelKeyword(ctx *gin.Context) {
 	keyword := strings.TrimSpace(ctx.Query("keyword"))
 	if len(keyword) == 0 {
-		RespJSON(ctx, 201)
+		RespJSON(ctx, ErrArgInvalid)
 		return
 	}
 
-	if dict.DelKeyword(keyword) {
-		RespJSON(ctx, 200)
+	if matcher.DelKeyword(keyword) {
+		RespJSON(ctx, ErrOK)
 		return
 	}
 
-	RespJSON(ctx, 202)
+	RespJSON(ctx, ErrNotFound)
 }
 
 func main() {
 	flag.Parse()
 
-	if err := dict.LoadWordsFromFile(*srcFile); err != nil {
-		log.Fatalf("Failed to load keywords source file error: %v\n", err)
+	matcher = NewDict()
+
+	if err := matcher.LoadWordsFromFile(*srcFile); err != nil {
+		log.Fatalf("Failed to load keywords from file error: %v\n", err)
 		return
 	}
 
@@ -138,7 +118,7 @@ func main() {
 		group.GET("/del_keyword", DelKeyword)
 	}
 
-	if err := router.Run(fmt.Sprintf("%s:%d", *host, *port)); err != nil {
+	if err := router.Run(fmt.Sprintf("%s:%d", *sHost, *sPort)); err != nil {
 		log.Fatalf("Failed to run HTTP server error: %v\n", err)
 	}
 }
