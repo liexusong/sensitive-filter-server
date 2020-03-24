@@ -11,18 +11,18 @@ import (
 )
 
 type Dict struct {
-	lastId   int
-	wordTree *cedar.Cedar
-	wordMaps map[int]string
-	mutex    *sync.RWMutex
+	lastId int
+	dTree  *cedar.Cedar
+	cache  map[int]string
+	mutex  *sync.RWMutex
 }
 
 func NewDict() *Dict {
 	return &Dict{
-		lastId:   0,
-		wordTree: cedar.New(),
-		wordMaps: make(map[int]string),
-		mutex:    &sync.RWMutex{},
+		lastId: 0,
+		dTree:  cedar.New(),
+		cache:  make(map[int]string),
+		mutex:  &sync.RWMutex{},
 	}
 }
 
@@ -36,60 +36,60 @@ func (dict *Dict) GetLastId() int {
 	return dict.lastId
 }
 
-func (dict *Dict) AddKeyword(origText string) bool {
-	realText := []byte(origText)
+func (dict *Dict) AddKeyword(realText string) bool {
+	byteText := []byte(realText)
 
 	dict.mutex.Lock()
 	defer dict.mutex.Unlock()
 
-	// Find the word already exists?
-	_, err := dict.wordTree.Get(realText)
+	_, err := dict.dTree.Get(byteText)
 	if err == nil {
 		return false
 	}
 
 	lastId := dict.GenLastId()
 
-	if err = dict.wordTree.Insert(realText, lastId); err != nil {
+	if err = dict.dTree.Insert(byteText, lastId); err != nil {
 		return false
 	}
 
-	dict.wordMaps[lastId] = origText
+	dict.cache[lastId] = realText
 
 	return true
 }
 
-func (dict *Dict) DelKeyword(origText string) bool {
-	realText := []byte(origText)
+func (dict *Dict) DelKeyword(realText string) bool {
+	byteText := []byte(realText)
 
 	dict.mutex.Lock()
 	defer dict.mutex.Unlock()
 
-	// Find the word already exists?
-	index, err := dict.wordTree.Get(realText)
+	id, err := dict.dTree.Get(byteText)
 	if err != nil {
 		return false
 	}
 
-	if err = dict.wordTree.Delete(realText); err != nil {
+	if err = dict.dTree.Delete(byteText); err != nil {
 		return false
 	}
 
-	delete(dict.wordMaps, index)
+	delete(dict.cache, id)
 
 	return true
 }
 
 func (dict *Dict) MatchAll(text []byte, size int) []string {
-	var values []string
+	var (
+		values []string
+	)
 
 	dict.mutex.RLock()
 	defer dict.mutex.RUnlock()
 
-	matches := dict.wordTree.MatchAll(text, size)
+	matches := dict.dTree.MatchAll(text, size)
 	if len(matches) > 0 {
 		for _, match := range matches {
-			if value, exists := dict.wordMaps[match]; exists {
+			if value, exists := dict.cache[match]; exists {
 				values = append(values, value)
 			}
 		}
@@ -102,10 +102,10 @@ func (dict *Dict) Exists(text []byte) bool {
 	dict.mutex.RLock()
 	defer dict.mutex.RUnlock()
 
-	return dict.wordTree.Exists(text)
+	return dict.dTree.Exists(text)
 }
 
-func (dict *Dict) LoadWordsFile(path string) error {
+func (dict *Dict) LoadWordsFromFile(path string) error {
 	fp, err := os.Open(path)
 	if err != nil {
 		return err
